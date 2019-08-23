@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <REPOSITORY
    NAME="Siebel Repository"
    UPDATED="04/05/2016 03:46:11"
@@ -42,6 +42,67 @@
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:25:47"
 			   CREATED_BY="SADMIN">
+			   <BUSINESS_SERVICE_METHOD_ARG
+			   DATA_TYPE="String"
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="&lt;Value&gt;"
+			   OPTIONAL="N"
+			   STORAGE_TYPE="Value"
+			   TYPE="Input"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_METHOD_ARG>
+			<BUSINESS_SERVICE_METHOD_ARG
+			   DATA_TYPE="Hierarchy"
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="PropertySet"
+			   OPTIONAL="N"
+			   STORAGE_TYPE="Hierarchy"
+			   TYPE="Output"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_METHOD_ARG>
+			</BUSINESS_SERVICE_METHOD>
+			<BUSINESS_SERVICE_METHOD
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="JSONToPropsetAttr"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			   <BUSINESS_SERVICE_METHOD_ARG
+			   DATA_TYPE="String"
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="&lt;Value&gt;"
+			   OPTIONAL="N"
+			   STORAGE_TYPE="Value"
+			   TYPE="Input"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_METHOD_ARG>
+			<BUSINESS_SERVICE_METHOD_ARG
+			   DATA_TYPE="Hierarchy"
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="PropertySet"
+			   OPTIONAL="N"
+			   STORAGE_TYPE="Hierarchy"
+			   TYPE="Output"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_METHOD_ARG>
 			</BUSINESS_SERVICE_METHOD>
 			<BUSINESS_SERVICE_METHOD
 			   HIDDEN="N"
@@ -51,7 +112,77 @@
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:25:55"
 			   CREATED_BY="SADMIN">
+			   <BUSINESS_SERVICE_METHOD_ARG
+			   DATA_TYPE="String"
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="&lt;Value&gt;"
+			   OPTIONAL="N"
+			   STORAGE_TYPE="Value"
+			   TYPE="Output"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_METHOD_ARG>
+			<BUSINESS_SERVICE_METHOD_ARG
+			   DATA_TYPE="Hierarchy"
+			   HIDDEN="N"
+			   INACTIVE="N"
+			   NAME="PropertySet"
+			   OPTIONAL="N"
+			   STORAGE_TYPE="Hierarchy"
+			   TYPE="Input"
+			   UPDATED="06/03/2016 02:25:48"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:25:47"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_METHOD_ARG>
 			</BUSINESS_SERVICE_METHOD>
+			<BUSINESS_SERVICE_SERVER_SCRIPT
+			   INACTIVE="N"
+			   NAME="ConvertJSONtoPSAttr"
+			   PROGRAM_LANGUAGE="JS"
+			   SCRIPT="function ConvertJSONtoPSAttr(Inputs)
+{
+/******************************************
+Created By: Jim
+Support: http://howtosiebel.blogspot.com
+******************************************/
+	try {
+		eval(&quot;var temp =&quot; + Inputs.GetValue());
+
+		var op = TheApplication().NewPropertySet();
+		for (var x in temp) {
+			if (typeof(temp[x]) == &quot;object&quot;) {
+				var child = TheApplication().NewPropertySet();
+				child = ObjectToPSAttr(temp[x]);
+				child.SetType(x);
+				op.AddChild(child);
+			}	else {
+				op.SetProperty(x,temp[x]);
+			}
+		}
+		return (op);
+	}	catch (e) {
+		var sError;
+		if (typeof(e.errText) != &quot;undefined&quot;)
+			sError = e.errText;
+        else	{
+            sError = e.toString();
+			TheApplication().RaiseErrorText(&quot;An exception occurred in the PropertySet to Json function of the &quot; + this.Name() + &quot; object.\n\n&quot; + sError);
+		}
+    }	finally {
+        op = null;
+        child = null;
+    }
+}"
+			   SEQUENCE="1"
+			   UPDATED="06/03/2016 02:24:39"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:21:28"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_SERVER_SCRIPT>
 			<BUSINESS_SERVICE_SERVER_SCRIPT
 			   INACTIVE="N"
 			   NAME="ConvertJSONtoPS"
@@ -59,28 +190,128 @@
 			   SCRIPT="function ConvertJSONtoPS(Inputs)
 {
 /******************************************
-Created By: Jim
-Support: http://howtosiebel.blogspot.com
+The same as Jim's method with abilities to get result tags as elements
 ******************************************/
-	eval(&quot;var temp =&quot; + Inputs.GetValue());
-	
-	var op = TheApplication().NewPropertySet();
-	for (var x in temp)
-	{
-		if(typeof(temp[x]) == &quot;object&quot;){
-			var child = TheApplication().NewPropertySet();
-			child = ObjectToPS(temp[x]);
-			child.SetType(x);
-			op.AddChild(child);
-		}			
-		else op.SetProperty(x,temp[x]);
-	}	
-	return (op);
+	try {
+		eval(&quot;var temp =&quot; + Inputs.GetValue());
+
+		var op = TheApplication().NewPropertySet();
+		for (var x in temp) {
+			if (typeof(temp[x]) == &quot;object&quot;) {
+				var child = TheApplication().NewPropertySet();
+				child = ObjectToPS(temp[x]);
+				child.SetType(x);
+				op.AddChild(child);
+			} else {
+				var childsec = TheApplication().NewPropertySet();
+				childsec.SetType(x);
+				childsec.SetValue(temp[x]);
+				op.AddChild(childsec);
+			}
+		}
+		return (op);
+	}	catch (e) {
+		var sError;
+		if (typeof(e.errText) != &quot;undefined&quot;)
+			sError = e.errText;
+        else {
+            sError = e.toString();
+			TheApplication().RaiseErrorText(&quot;An exception occurred in the PropertySet to Json function of the &quot; + this.Name() + &quot; object.\n\n&quot; + sError);
+		}
+    }	finally {
+        op = null;
+        child = null;
+        childsec = null;
+    }
 }"
-			   SEQUENCE="1"
+			   SEQUENCE="2"
 			   UPDATED="06/03/2016 02:24:39"
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:21:28"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_SERVER_SCRIPT>
+			<BUSINESS_SERVICE_SERVER_SCRIPT
+			   INACTIVE="N"
+			   NAME="ObjectToPS"
+			   PROGRAM_LANGUAGE="JS"
+			   SCRIPT="function ObjectToPS(obj){
+/******************************************
+Part of ConvertJSONtoPS method
+******************************************/
+		try {
+		var op = TheApplication().NewPropertySet();
+		for (var x in obj){
+			if(typeof(obj[x]) == &quot;object&quot;){
+				var child = TheApplication().NewPropertySet();
+				child = ObjectToPS(obj[x]);
+				child.SetType(x);
+				op.AddChild(child);
+			}	else {
+				var childsec = TheApplication().NewPropertySet();
+				childsec.SetType(x);
+				childsec.SetValue(obj[x]);
+				op.AddChild(childsec);
+			}
+		}	
+		return (op);
+	}	catch (e) {
+		var sError;
+		if (typeof(e.errText) != &quot;undefined&quot;)
+			sError = e.errText;
+        else {
+            sError = e.toString();
+			TheApplication().RaiseErrorText(&quot;An exception occurred in the PropertySet to Json function of the &quot; + this.Name() + &quot; object.\n\n&quot; + sError);
+		}
+    }	finally {
+        op = null;
+        child = null;
+        childsec = null;
+    }	
+}"
+			   SEQUENCE="3"
+			   UPDATED="06/03/2016 02:24:16"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:23:53"
+			   CREATED_BY="SADMIN">
+			</BUSINESS_SERVICE_SERVER_SCRIPT>
+			<BUSINESS_SERVICE_SERVER_SCRIPT
+			   INACTIVE="N"
+			   NAME="ObjectToPSAttr"
+			   PROGRAM_LANGUAGE="JS"
+			   SCRIPT="function ObjectToPSAttr(obj){
+/******************************************
+Part of ConvertJSONtoPS method
+******************************************/
+	try {
+		var op = TheApplication().NewPropertySet();
+		for (var x in obj) {
+			if(typeof(obj[x]) == &quot;object&quot;){
+				var child = TheApplication().NewPropertySet();
+				child = ObjectToPSAttr(obj[x]);
+				child.SetType(x);
+				op.AddChild(child);
+			}	else {
+            op.SetProperty(x,obj[x]);
+			}
+		}	
+		return (op);
+	}	catch (e) {
+		var sError;
+		if (typeof(e.errText) != &quot;undefined&quot;)
+        sError = e.errText;
+        else {
+            sError = e.toString();
+			TheApplication().RaiseErrorText(&quot;An exception occurred in the PropertySet to Json function of the &quot; + this.Name() + &quot; object.\n\n&quot; + sError);
+		}
+    }	finally {
+        op = null;
+        child = null;
+    }	
+}"
+			   SEQUENCE="4"
+			   UPDATED="06/03/2016 02:24:16"
+			   UPDATED_BY="SADMIN"
+			   CREATED="06/03/2016 02:23:53"
 			   CREATED_BY="SADMIN">
 			</BUSINESS_SERVICE_SERVER_SCRIPT>
 			<BUSINESS_SERVICE_SERVER_SCRIPT
@@ -92,78 +323,63 @@ Support: http://howtosiebel.blogspot.com
 Created By: Jim
 Support: http://howtosiebel.blogspot.com
 ******************************************/
-    var str,j;
-    var propName = &quot;&quot;;
-    var propVal = &quot;&quot;;
-    
-    str = &quot;{&quot;;
-    
-    propName = Inputs.GetFirstProperty();    
-    
-    //Type and value
-    if(Inputs.GetValue() != null &amp;&amp; Inputs.GetValue() != &quot;&quot;){
-        str = str + &apos;&quot;&apos; + Inputs.GetType()  + &apos;&quot;&apos; + &quot;:&quot;  + &apos;&quot;&apos; + Inputs.GetValue() + &apos;&quot;&apos;;    
-        if(propName != &quot;&quot;) str= str + &quot;,&quot;;
-    }
+    try {
+		var str,j;
+		var propName = &quot;&quot;;
+		var propVal = &quot;&quot;;
+		
+		str = &quot;{&quot;;
+		
+		propName = Inputs.GetFirstProperty();    
+		
+		//Type and value
+		if(Inputs.GetValue() != null &amp;&amp; Inputs.GetValue() != &quot;&quot;){
+			str = str + &apos;&quot;&apos; + Inputs.GetType()  + &apos;&quot;&apos; + &quot;:&quot;  + &apos;&quot;&apos; + Inputs.GetValue() + &apos;&quot;&apos;;    
+			if(propName != &quot;&quot;) str= str + &quot;,&quot;;
+		}
     
     
     //Properties
-    while (propName != &quot;&quot;) {
-        propVal = Inputs.GetProperty(propName);
-        str = str + &apos;&quot;&apos; + propName +  &apos;&quot;&apos; + &quot;:&quot; + &apos;&quot;&apos; +propVal + &apos;&quot;&apos;;
-        propName = Inputs.GetNextProperty();
-        if(propName != &quot;&quot;) str = str + &quot;,&quot;;
-        
-    }
-    propName = Inputs.GetFirstProperty();
-    if(propName != &quot;&quot; &amp;&amp; Inputs.GetChildCount()&gt; 0)str = str + &quot;,&quot;;
-    
-    //Loop for child
-    if(Inputs.GetChildCount()&gt; 0){ 
-    if(Inputs.GetChildCount()&gt; 1)str = str + &apos;&quot;Object&quot;&apos; + &quot;:&quot; + &quot;{&quot;;
-    for (var i = 0; i &lt; Inputs.GetChildCount(); i++){
-            j = Inputs.GetChild(i);
-            str = str + &apos;&quot;&apos; + j.GetType() + i + &apos;&quot;&apos; + &quot;:&quot; + CreateJSON(j);// + &quot;,&quot;;
-            if(i+1&lt;Inputs.GetChildCount()) str =str + &quot;,&quot;;
-    }
-    if(Inputs.GetChildCount()&gt; 1)str = str + &quot;}&quot;;
-    }
-    str = str + &quot;}&quot;;
-    return str;    
+		while (propName != &quot;&quot;) {
+			propVal = Inputs.GetProperty(propName);
+			str = str + &apos;&quot;&apos; + propName +  &apos;&quot;&apos; + &quot;:&quot; + &apos;&quot;&apos; +propVal + &apos;&quot;&apos;;
+			propName = Inputs.GetNextProperty();
+			if(propName != &quot;&quot;) str = str + &quot;,&quot;;
+			
+		}
+		propName = Inputs.GetFirstProperty();
+		if(propName != &quot;&quot; &amp;&amp; Inputs.GetChildCount()&gt; 0)str = str + &quot;,&quot;;
+		
+		//Loop for child
+		if(Inputs.GetChildCount()&gt; 0){ 
+			if(Inputs.GetChildCount()&gt; 1)str = str + &apos;&quot;Object&quot;&apos; + &quot;:&quot; + &quot;{&quot;;
+			for (var i = 0; i &lt; Inputs.GetChildCount(); i++){
+				j = Inputs.GetChild(i);
+				str = str + &apos;&quot;&apos; + j.GetType() + i + &apos;&quot;&apos; + &quot;:&quot; + CreateJSON(j);// + &quot;,&quot;;
+				if(i+1&lt;Inputs.GetChildCount()) str =str + &quot;,&quot;;
+			}
+			if(Inputs.GetChildCount()&gt; 1)str = str + &quot;}&quot;;
+		}
+		str = str + &quot;}&quot;;
+		return str; 
+	} catch (e) {
+		var sError;
+		if (typeof(e.errText) != &quot;undefined&quot;)
+			sError = e.errText;
+		else
+			sError = e.toString();
+			TheApplication().RaiseErrorText(&quot;An exception occurred in the PropertySet to Json function of the &quot; + this.Name() + &quot; object.\n\n&quot; + sError);
+	}	finally {
+		str = null;
+		j = null;
+		propName = null;
+		propVal = null;
+	}	
 }"
-			   SEQUENCE="2"
+			   SEQUENCE="5"
 			   UPDATED="06/03/2016 02:37:45"
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:10:34"
-			   CREATED_BY="SADMIN">
-			</BUSINESS_SERVICE_SERVER_SCRIPT>
-			<BUSINESS_SERVICE_SERVER_SCRIPT
-			   INACTIVE="N"
-			   NAME="ObjectToPS"
-			   PROGRAM_LANGUAGE="JS"
-			   SCRIPT="function ObjectToPS(obj){
-/******************************************
-Created By: Jim
-Support: http://howtosiebel.blogspot.com
-******************************************/
-
-	var op = TheApplication().NewPropertySet();
-	for (var x in obj)
-	{
-		if(typeof(obj[x]) == &quot;object&quot;){
-			var child = TheApplication().NewPropertySet();
-			child = ObjectToPS(obj[x]);
-			child.SetType(x);
-			op.AddChild(child);
-		}			
-		else op.SetProperty(x,obj[x]);
-	}	
-	return (op);
-}"
-			   SEQUENCE="3"
-			   UPDATED="06/03/2016 02:24:16"
-			   UPDATED_BY="SADMIN"
-			   CREATED="06/03/2016 02:23:53"
 			   CREATED_BY="SADMIN">
 			</BUSINESS_SERVICE_SERVER_SCRIPT>
 			<BUSINESS_SERVICE_SERVER_SCRIPT
@@ -172,9 +388,8 @@ Support: http://howtosiebel.blogspot.com
 			   PROGRAM_LANGUAGE="JS"
 			   SCRIPT="function Service_InvokeMethod (MethodName, Inputs, Outputs)
 {
-
 }"
-			   SEQUENCE="4"
+			   SEQUENCE="6"
 			   UPDATED="06/03/2016 02:23:53"
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:04:28"
@@ -188,7 +403,7 @@ Support: http://howtosiebel.blogspot.com
 {
 	return (ContinueOperation);
 }"
-			   SEQUENCE="5"
+			   SEQUENCE="7"
 			   UPDATED="06/03/2016 02:23:53"
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:22:50"
@@ -204,13 +419,17 @@ Support: http://howtosiebel.blogspot.com
 		Outputs.SetValue(CreateJSON(Inputs));
 		return (CancelOperation);
 	}
+	if(MethodName == &quot;JSONToPropsetAttr&quot;){
+		Outputs.AddChild(ConvertJSONtoPSAttr(Inputs));
+		return (CancelOperation);
+	}
 	if(MethodName == &quot;JSONToPropset&quot;){
 		Outputs.AddChild(ConvertJSONtoPS(Inputs));
 		return (CancelOperation);
 	}
 	return (CancelOperation);
 }"
-			   SEQUENCE="6"
+			   SEQUENCE="8"
 			   UPDATED="06/03/2016 03:22:03"
 			   UPDATED_BY="SADMIN"
 			   CREATED="06/03/2016 02:04:17"
@@ -219,6 +438,3 @@ Support: http://howtosiebel.blogspot.com
 		</BUSINESS_SERVICE>
 	</PROJECT>
 </REPOSITORY>
-
-
-
